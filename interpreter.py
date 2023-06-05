@@ -24,41 +24,45 @@ class Interpreter:
     def error(self):
         raise Exception("Error parsing input")
 
+    def advance(self):
+        self._pos += 1
+        if self._pos >= len(self._text):
+            self._current_char = None  # indicate end of input
+        else:
+            self._current_char = self._text[self._pos]
+
+    def _skip_whitespace(self):
+        while self._current_char is not None and self._current_char.isspace():
+            self.advance()
+
+    def integer(self):
+        "Return a (multidigit) integer consumed from the input."
+        result = ""
+        while self._current_char is not None and self._current_char.isdigit():
+            result += self._current_char
+            self.advance()
+        return int(result)
+
     def get_next_token(self) -> Token:
-        text = self._text
+        """Lexical analyzer (also known as scanner or tokenizer)
 
-        # verify that the pos is within a legal range
-        if self._pos >= len(text):
-            return Token(EOF, None)
-
-        # move pos forward and get the pos-th char
-        curr_char = self._text[self._pos]
-        token_chars = ""
-
-        # move the pos forward until the char that the pos points to is not digit
-        while curr_char.isdigit():
-            token_chars += curr_char
-            self._pos += 1
-            if self._pos < len(text):
-                curr_char = self._text[self._pos]
-            else:
-                break
-
-        # depend on the got char infer its token type
-        if token_chars:
-            return Token(INTEGER, int(token_chars))
-
-        if curr_char == "+":
-            token = Token(PLUS, curr_char)
-            self._pos += 1
-            return token
-
-        if curr_char == "-":
-            token = Token(MINUS, curr_char)
-            self._pos += 1
-            return token
-
-        self.error()
+        This method is responsible for breaking a sentence
+        apart into tokens.
+        """
+        while self._current_char is not None:
+            if self._current_char.isspace():
+                self._skip_whitespace()
+                continue
+            if self._current_char.isdigit():
+                return Token(INTEGER, self.integer())
+            if self._current_char == "+":
+                self.advance()
+                return Token(PLUS, "+")
+            if self._current_char == "-":
+                self.advance()
+                return Token(MINUS, "-")
+            self.error()
+        return Token(EOF, None)
 
     def eat(self, token_type):
         # get next token and verify the type is compliant with token_type
@@ -87,6 +91,8 @@ class Interpreter:
             self.eat(PLUS)
         elif op.type == MINUS:
             self.eat(MINUS)
+        else:
+            self.error()
 
         # verify the token to be an integer
         right = self._current_token
@@ -94,5 +100,8 @@ class Interpreter:
         # after the above call the self._current_token is set to EOF token
 
         # expr above token op
-        result = left.value + right.value
+        if op.type == PLUS:
+            result = left.value + right.value
+        elif op.type == MINUS:
+            result = left.value - right.value
         return result
