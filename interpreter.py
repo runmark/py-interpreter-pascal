@@ -71,6 +71,9 @@ class Interpreter:
         else:
             self.error()
 
+    def term(self):
+        self.eat(INTEGER)
+
     def expr(self):
         """Parser / Interpreter
 
