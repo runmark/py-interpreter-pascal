@@ -17,8 +17,9 @@ class Token:
 class Interpreter:
     def __init__(self, text):
         self._text = text
-        self._current_token = None
         self._pos = 0
+        self._current_token = None
+        self._current_char = self._text[self._pos]
 
     def error(self):
         raise Exception("Error parsing input")
@@ -67,22 +68,30 @@ class Interpreter:
             self.error()
 
     def expr(self):
-        """expr text -> INTEGER PLUS INTEGER"""
+        """Parser / Interpreter
+
+        expr -> INTEGER PLUS INTEGER
+        expr -> INTEGER MINUS INTEGER
+        """
 
         # set current token to the first token taken from input
         self._current_token = self.get_next_token()
 
-        # verify the token to be a single digit integer and forward
+        # verify the current token to be an integer
         left = self._current_token
         self.eat(INTEGER)
 
-        # verify the token to be a '+' token and forward
+        # verify the current token to either a '+' or '-'
         op = self._current_token
-        self.eat(PLUS)
+        if op.type == PLUS:
+            self.eat(PLUS)
+        elif op.type == MINUS:
+            self.eat(MINUS)
 
-        # verify the token to be a single digit integer and forward
+        # verify the token to be an integer
         right = self._current_token
         self.eat(INTEGER)
+        # after the above call the self._current_token is set to EOF token
 
         # expr above token op
         result = left.value + right.value
