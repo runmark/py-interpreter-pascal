@@ -1,5 +1,12 @@
 # TOKEN TYPES
-INTEGER, PLUS, MINUS, EOF = "INTEGER", "PLUS", "MINUS", "EOF"
+INTEGER, PLUS, MINUS, MULTIPLY, DIVID, EOF = (
+    "INTEGER",
+    "PLUS",
+    "MINUS",
+    "MULTIPLY",
+    "DIVID",
+    "EOF",
+)
 
 
 class Token:
@@ -77,31 +84,33 @@ class Interpreter:
         expr -> INTEGER PLUS INTEGER
         expr -> INTEGER MINUS INTEGER
         """
+        operator_stack = []
+        operand_stack = []
 
         # set current token to the first token taken from input
         self._current_token = self.get_next_token()
 
-        # verify the current token to be an integer
-        left = self._current_token
-        self.eat(INTEGER)
-
-        # verify the current token to either a '+' or '-'
-        op = self._current_token
-        if op.type == PLUS:
-            self.eat(PLUS)
-        elif op.type == MINUS:
-            self.eat(MINUS)
-        else:
-            self.error()
-
-        # verify the token to be an integer
-        right = self._current_token
-        self.eat(INTEGER)
+        while self._current_token.value != None:
+            token = self._current_token
+            if token.type in (INTEGER):
+                operand_stack.append(token)
+                self.eat(INTEGER)
+            elif token.type in (PLUS, MINUS, MULTIPLY, DIVID):
+                operator_stack.append(token)
+                self.eat(token.type)
+            else:
+                self.error()
         # after the above call the self._current_token is set to EOF token
 
+        result = 0
         # expr above token op
-        if op.type == PLUS:
-            result = left.value + right.value
-        elif op.type == MINUS:
-            result = left.value - right.value
-        return result
+        while len(operator_stack) > 0:
+            left = operand_stack.pop(-1)
+            right = operand_stack.pop(-1)
+            op = operator_stack.pop(-1)
+            if op.type == PLUS:
+                result = left.value + right.value
+            elif op.type == MINUS:
+                result = left.value - right.value
+            operand_stack.append(Token(INTEGER, result))
+        return operand_stack.pop().value
