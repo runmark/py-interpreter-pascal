@@ -56,6 +56,12 @@ class Lexer:
             if self._current_char.isdigit():
                 return Token(INTEGER, self._integer())
 
+            if self._current_char == "+":
+                self._advance()
+                return Token(PLUS, "+")
+            if self._current_char == "-":
+                self._advance()
+                return Token(MINUS, "-")
             if self._current_char == "*":
                 self._advance()
                 return Token(MUL, "*")
@@ -69,6 +75,13 @@ class Lexer:
 
 
 class Interpreter:
+    """Parser / Interpreter
+
+    expr: term ((PLUS|MINUS) term)*
+    term: factor ((MUL|DIV) factor)*
+    factor: INTEGER
+    """
+
     def __init__(self, lexer):
         self._lexer = lexer
         # set current token to the first token taken from the input
@@ -93,12 +106,7 @@ class Interpreter:
         self._eat(INTEGER)
         return token.value
 
-    def expr(self):
-        """Parser / Interpreter
-
-        expr: factor ((MUL|DIV) factor)*
-        factor: INTEGER
-        """
+    def _term(self):
         result = self._factor()
 
         while self._current_token.type in (MUL, DIV):
@@ -109,5 +117,19 @@ class Interpreter:
             elif token.type == DIV:
                 self._eat(DIV)
                 result = result / self._factor()
+
+        return result
+
+    def expr(self):
+        result = self._term()
+
+        while self._current_token.type in (PLUS, MINUS):
+            token = self._current_token
+            if token.type == PLUS:
+                self._eat(PLUS)
+                result = result + self._term()
+            elif token.type == MINUS:
+                self._eat(MINUS)
+                result = result - self._term()
 
         return result
