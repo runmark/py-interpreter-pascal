@@ -118,7 +118,7 @@ class Interpreter:
                 self._eat(DIV)
                 result = result / self._factor()
 
-        return result
+        return int(result)
 
     def expr(self):
         result = self._term()
