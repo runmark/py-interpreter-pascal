@@ -131,10 +131,4 @@ class Interpreter:
             elif token.type == MINUS:
                 self._eat(MINUS)
                 result = result - self._term()
-
-        # expr above token op
-        if op.type == PLUS:
-            result = left.value + right.value
-        elif op.type == MINUS:
-            result = left.value - right.value
         return result
