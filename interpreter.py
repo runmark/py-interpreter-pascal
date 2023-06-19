@@ -33,7 +33,7 @@ class Lexer:
         if self._pos >= len(self._text):
             self._current_char = None
         else:
-            self._current_char = self.text[self._pos]
+            self._current_char = self._text[self._pos]
 
     def _skip_whitespace(self):
         while self._current_char is not None and self._current_char.isspace():
@@ -63,24 +63,24 @@ class Lexer:
                 self._advance()
                 return Token(PLUS, "+")
 
-            if self.current_char == "-":
-                self.advance()
+            if self._current_char == "-":
+                self._advance()
                 return Token(MINUS, "-")
 
-            if self.current_char == "*":
-                self.advance()
+            if self._current_char == "*":
+                self._advance()
                 return Token(MUL, "*")
 
-            if self.current_char == "/":
-                self.advance()
+            if self._current_char == "/":
+                self._advance()
                 return Token(DIV, "/")
 
-            if self.current_char == "(":
-                self.advance()
+            if self._current_char == "(":
+                self._advance()
                 return Token(LPAREN, "(")
 
-            if self.current_char == ")":
-                self.advance()
+            if self._current_char == ")":
+                self._advance()
                 return Token(RPAREN, ")")
 
             self._error()
@@ -97,11 +97,12 @@ class Interpreter:
         raise Exception("Invalid Token")
 
     def _factor(self):
-        if self._current_token.type == INTEGER:
+        token = self._current_token
+        if token.type == INTEGER:
             self._eat(INTEGER)
-            return self._current_token.value
+            return token.value
 
-        elif self._current_token.type == LPAREN:
+        elif token.type == LPAREN:
             self._eat(LPAREN)
             result = self.expr()
             self._eat(RPAREN)
