@@ -28,6 +28,65 @@ class Lexer:
         self._pos = 0
         self._current_char = self._text[self._pos]
 
+    def _advance(self):
+        self._pos += 1
+        if self._pos >= len(self._text):
+            self._current_char = None
+        else:
+            self._current_char = self.text[self._pos]
+
+    def _skip_whitespace(self):
+        while self._current_char is not None and self._current_char.isspace():
+            self._advance()
+
+    def _integer(self):
+        result = ""
+        while self._current_char is not None and self._current_char.isdigit():
+            result += self._current_char
+            self._advance()
+
+        return int(result)
+
+    def _error(self):
+        raise Exception("Invalid character")
+
+    def get_next_token(self):
+        while self._current_char != None:
+            if self._current_char.isspace():
+                self._skip_whitespace()
+
+            if self._current_char.isdigit():
+                integer = self._integer()
+                return Token(INTEGER, integer)
+
+            if self._current_char == "+":
+                self._advance()
+                return Token(PLUS, "+")
+
+            if self.current_char == "-":
+                self.advance()
+                return Token(MINUS, "-")
+
+            if self.current_char == "*":
+                self.advance()
+                return Token(MUL, "*")
+
+            if self.current_char == "/":
+                self.advance()
+                return Token(DIV, "/")
+
+            if self.current_char == "(":
+                self.advance()
+                return Token(LPAREN, "(")
+
+            if self.current_char == ")":
+                self.advance()
+                return Token(RPAREN, ")")
+
+            self._error()
+
+        return Token(EOF, None)
+
 
 class Interpreter:
     def __init__(self, lexer):
