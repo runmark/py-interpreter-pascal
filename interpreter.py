@@ -93,6 +93,39 @@ class Interpreter:
         self._lexer = lexer
         self._current_token = self._lexer.get_next_token()
 
+    def _error(self):
+        raise Exception("Invalid Token")
+
+    def _factor(self):
+        if self._current_token.type == INTEGER:
+            self._eat(INTEGER)
+            return self._current_token.value
+
+        elif self._current_token.type == LPAREN:
+            self._eat(LPAREN)
+            result = self.expr()
+            self._eat(RPAREN)
+            return result
+
+    def _term(self):
+        result = self._factor()
+
+        while self._current_token.type in (MUL, DIV):
+            if self._current_token.type == MUL:
+                self._eat(MUL)
+                result = result * self._factor()
+            elif self._current_token.type == DIV:
+                self._eat(DIV)
+                result = result / self._factor()
+
+        return result
+
+    def _eat(self, type):
+        if self._current_token.type == type:
+            self._current_token = self._lexer.get_next_token()
+        else:
+            self._error()
+
     def expr(self):
         """Arithmetic expression parser / interpreter.
 
@@ -103,4 +136,14 @@ class Interpreter:
         term   : factor ((MUL | DIV) factor)*
         factor : INTEGER | LPAREN expr RPAREN
         """
-        pass
+        result = self._term()
+
+        while self._current_token.type in (PLUS, MINUS):
+            if self._current_token.type == PLUS:
+                self._eat(PLUS)
+                result = result + self._term()
+            elif self._current_token.type == MINUS:
+                self._eat(MINUS)
+                result = result - self._term()
+
+        return result
