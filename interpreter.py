@@ -88,6 +88,10 @@ class Lexer:
         return Token(EOF, None)
 
 
+class AST:
+    pass
+
+
 class Interpreter:
     def __init__(self, lexer):
         self._lexer = lexer
