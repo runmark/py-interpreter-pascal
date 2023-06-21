@@ -1,3 +1,11 @@
+""" SPI - Simple Pascal Interpreter """
+
+###############################################################################
+#                                                                             #
+#  LEXER                                                                      #
+#                                                                             #
+###############################################################################
+
 INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF = (
     "INTEGER",
     "+",
@@ -88,11 +96,31 @@ class Lexer:
         return Token(EOF, None)
 
 
+###############################################################################
+#                                                                             #
+#  PARSER                                                                     #
+#                                                                             #
+###############################################################################
+
+
 class AST:
     pass
 
 
-class Interpreter:
+class BinOp(AST):
+    def __init__(self, left, op, right):
+        self._left = left
+        self._token = self._op = op
+        self._right = right
+
+
+class Num(AST):
+    def __init__(self, token):
+        self._token = token
+        self._value = token.value
+
+
+class Parser:
     def __init__(self, lexer):
         self._lexer = lexer
         self._current_token = self._lexer.get_next_token()
@@ -104,26 +132,27 @@ class Interpreter:
         token = self._current_token
         if token.type == INTEGER:
             self._eat(INTEGER)
-            return token.value
+            return Num(token)
 
         elif token.type == LPAREN:
             self._eat(LPAREN)
-            result = self.expr()
+            node = self._expr()
             self._eat(RPAREN)
-            return result
+            return node
 
     def _term(self):
-        result = self._factor()
+        node = self._factor()
 
         while self._current_token.type in (MUL, DIV):
-            if self._current_token.type == MUL:
+            token = self._current_token
+            if token.type == MUL:
                 self._eat(MUL)
-                result = result * self._factor()
-            elif self._current_token.type == DIV:
+            elif token.type == DIV:
                 self._eat(DIV)
-                result = result / self._factor()
 
-        return result
+            node = BinOp(left=node, op=token, right=self._factor())
+
+        return node
 
     def _eat(self, type):
         if self._current_token.type == type:
@@ -131,7 +160,7 @@ class Interpreter:
         else:
             self._error()
 
-    def expr(self):
+    def _expr(self):
         """Arithmetic expression parser / interpreter.
 
         calc> 7 + 3 * (10 / (12 / (3 + 1) - 1))
@@ -141,14 +170,30 @@ class Interpreter:
         term   : factor ((MUL | DIV) factor)*
         factor : INTEGER | LPAREN expr RPAREN
         """
-        result = self._term()
+        node = self._term()
 
         while self._current_token.type in (PLUS, MINUS):
-            if self._current_token.type == PLUS:
+            token = self._current_token
+            if token.type == PLUS:
                 self._eat(PLUS)
-                result = result + self._term()
-            elif self._current_token.type == MINUS:
+            elif token.type == MINUS:
                 self._eat(MINUS)
-                result = result - self._term()
 
-        return result
+            node = BinOp(left=node, op=token, right=self._term())
+
+        return node
+
+    def parse(self):
+        return self._expr()
+
+
+###############################################################################
+#                                                                             #
+#  INTERPRETER                                                                #
+#                                                                             #
+###############################################################################
+
+
+class Interpreter:
+    def __init__(self, ast: AST):
+        pass
